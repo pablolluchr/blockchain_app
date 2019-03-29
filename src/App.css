@@ -1,0 +1,113 @@
+body{
+  text-align: center;
+
+}
+
+
+/* TRANSACTIONS */
+.transaction{
+  padding: 10px;
+  margin:10px;
+  /* background-color: rgb(244, 244, 244); */
+}
+
+#transactionsList{
+margin-left:80px;
+margin-right:80px;
+
+}
+.transactionInformation > *{
+  display: inline-block;
+  margin: 10px;
+}
+
+.amount{
+  padding:10px;
+  font-size: 0.9rem;
+}
+
+.table td{
+  vertical-align: middle;
+  border-top: none
+}
+
+.table-borderless{
+  display: inline-block;
+}
+
+#navigation{
+  display: inline-block
+}
+
+.white{
+  background-color: white !important;
+}
+
+.inputs{
+  display: inline-block;
+  vertical-align: top;
+  margin: 10px;
+  top:0px;
+}
+
+.out{
+ display: inline-block;
+ margin: 10px;
+}
+
+
+/* ADDRESS SEARCH */c
+.addressValue{
+  display: inline-block;
+}
+
+#searchAddress{
+text-align: center;
+padding-top: 60px;
+padding-bottom: 30px;
+}
+
+#addressForm{
+  width:450px;
+  display:inline-block;
+}
+
+#searchForm{
+  padding:30px;
+  background-color: rgb(18, 18, 18);
+  margin-bottom: 30px;
+}
+
+#addressSearchbox{
+  display: inline-block;
+  vertical-align: middle;
+  width: 500px;
+}
+
+#addressSubmit{
+  display: inline-block;  
+  margin-left: 10px;
+}
+
+
+/* ADDRESS INFORMATION */
+#addressInformation{
+  display: inline-block;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.content{
+  text-align: center;
+}
+
+.left-margin{
+  margin-left: 10px;
+}
+
+
+
+
+
+
+
