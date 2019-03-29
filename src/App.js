@@ -1,9 +1,154 @@
 import React, { Component } from 'react';
 import './App.css';
 
-
-
 const transactionPerPage = 20;
+
+//general structure of app (header + address related stuff)
+class App extends Component {
+  render() {
+    return (
+      
+      <div className="App" >
+        {/* header */}
+        <BlockchainAddress/> 
+      </div>
+    );
+  }
+}
+
+//container for functionality regarding address search and display of information (including transactions)
+class BlockchainAddress extends Component{
+  constructor(props) {
+    super(props);
+    this.state = {
+      addressSearchInput: '', //value of the address searchbox
+      addressInformation: undefined,
+      isLoading: false,
+      offset: 0,
+      isAddressFound: true,
+
+    };
+  }
+
+  //periodically checks for new transactions in the current address
+  checkUpdates(){
+    if(this.addressInformation === undefined){return}
+    const address=this.addressInformation.address
+    window.setInterval(() =>{
+      //check every second for new transactions
+      fetch(`https://blockchain.info/rawaddr/${address}?cors=true&limit=1`)
+    .then(response => {
+      if (response.status !== 200) {
+        console.error('Problem fetching resource from API. Status code: ' + response.status);
+        return;
+      }
+      return response.json();
+      })
+    .catch(error => {
+      console.error(error)
+    })
+    .then(data => {
+      //check if address has new transactions
+
+      if (data !== undefined && this.state.addressInformation.n_tx !== data.n_tx){
+        this.searchAddress(address)
+      }
+    })
+    }, 1000);
+    
+
+  }
+  //updatess address whose information is being displayed (queries server and sets state variables)
+  searchAddress = (address) => {
+    clearInterval()
+
+    this.setState({
+      addressSearchInput:address,
+      addressInformation:undefined,
+      isLoading:true,
+    })
+
+    //fetch Blockchain API to retrieve address information
+    fetch(`https://blockchain.info/rawaddr/${address}?cors=true&limit=${transactionPerPage}&offset=${this.state.offset} `)
+    .then(response => {
+      if (response.status !== 200) {
+        console.error('Problem fetching resource from API. Status code: ' + response.status);
+        return;
+      }
+      return response.json();
+      })
+    .catch(error => {
+      this.setState({isLoading:false});
+      console.error(error)
+    })
+    .then(data => {
+      if (data !== undefined){
+        this.setState({
+          addressInformation: data,
+          isLoading:false,
+          numberOfPages: Math.ceil(data.n_tx/transactionPerPage),
+          isAddressFound:true
+        },this.checkUpdates) //start periodic updates for this address on the background
+      }else{
+          this.setState({
+            isLoading:false,
+            isAddressFound:false
+          })
+        }
+    })
+
+  }
+
+    //triggered when user submits from the address search box
+    submitAddressHandle = (e) => {
+      e.preventDefault()
+      this.searchAddress(this.state.addressSearchInput)
+    }
+  
+    changeOffset = (offset) => {
+      this.setState({offset: offset}, () => {
+        // query api for new inputs
+        this.searchAddress(this.state.addressSearchInput)
+
+      })
+    }
+  //triggerd when user inputs text in the address search box
+  changeAddressInputHandle = (e) => {
+    e.preventDefault()
+    this.setState({
+      addressSearchInput: e.target.value
+    })
+  }
+  render(){
+    let content = null;
+    
+    //load spinner if address is loading
+    if(!this.state.isLoading){
+      if(this.state.isAddressFound){
+        content = <div className = "content"><AddressInformation addressInformation = {this.state.addressInformation} updateAddress = {this.searchAddress}/>
+        <TransactionsList addressInformation = {this.state.addressInformation} updateAddress = {this.searchAddress} 
+        numberOfPages = {this.state.numberOfPages} offset = {this.state.offset} changeOffset={this.changeOffset}/>  </div>;
+      }else{
+        //address not found
+        content=<h4><span className="badge badge-danger">Address not found</span></h4>
+      }
+      
+    }else{ //load address information
+      content = <div className="spinner-border content " role="status">
+                    <span className="sr-only ">Loading...</span>
+                 </div>
+    }
+
+    return (
+      <div>
+      <InputAddress submitHandle = {this.submitAddressHandle} changeHandle = {this.changeAddressInputHandle} input = {this.state.addressSearchInput}/>
+      {content}
+      </div>
+    )
+  }
+}
+
+
 //search box and misc involved in the user searching a new address
 class InputAddress extends Component{ 
   render(){
@@ -271,151 +416,6 @@ class Pagination extends Component{
             </ul>
           </nav>
     )
-  }
-}
-
-//container for functionality regarding address search and display of information (including transactions)
-class BlockchainAddress extends Component{
-  constructor(props) {
-    super(props);
-    this.state = {
-      addressSearchInput: '', //value of the address searchbox
-      addressInformation: undefined,
-      isLoading: false,
-      offset: 0,
-      isAddressFound: true,
-
-    };
-  }
-
-  //periodically checks for new transactions in the current address
-  checkUpdates(){
-    if(this.addressInformation === undefined){return}
-    const address=this.addressInformation.address
-    window.setInterval(() =>{
-      //check every second for new transactions
-      fetch(`https://blockchain.info/rawaddr/${address}?cors=true&limit=1`)
-    .then(response => {
-      if (response.status !== 200) {
-        console.error('Problem fetching resource from API. Status code: ' + response.status);
-        return;
-      }
-      return response.json();
-      })
-    .catch(error => {
-      console.error(error)
-    })
-    .then(data => {
-      //check if address has new transactions
-
-      if (data !== undefined && this.state.addressInformation.n_tx !== data.n_tx){
-        this.searchAddress(address)
-      }
-    })
-    }, 1000);
-    
-
-  }
-  //updatess address whose information is being displayed (queries server and sets state variables)
-  searchAddress = (address) => {
-    clearInterval()
-
-    this.setState({
-      addressSearchInput:address,
-      addressInformation:undefined,
-      isLoading:true,
-    })
-
-    //fetch Blockchain API to retrieve address information
-    fetch(`https://blockchain.info/rawaddr/${address}?cors=true&limit=${transactionPerPage}&offset=${this.state.offset} `)
-    .then(response => {
-      if (response.status !== 200) {
-        console.error('Problem fetching resource from API. Status code: ' + response.status);
-        return;
-      }
-      return response.json();
-      })
-    .catch(error => {
-      this.setState({isLoading:false});
-      console.error(error)
-    })
-    .then(data => {
-      if (data !== undefined){
-        this.setState({
-          addressInformation: data,
-          isLoading:false,
-          numberOfPages: Math.ceil(data.n_tx/transactionPerPage),
-          isAddressFound:true
-        },this.checkUpdates) //start periodic updates for this address on the background
-      }else{
-          this.setState({
-            isLoading:false,
-            isAddressFound:false
-          })
-        }
-    })
-
-  }
-
-    //triggered when user submits from the address search box
-    submitAddressHandle = (e) => {
-      e.preventDefault()
-      this.searchAddress(this.state.addressSearchInput)
-    }
-  
-    changeOffset = (offset) => {
-      this.setState({offset: offset}, () => {
-        // query api for new inputs
-        this.searchAddress(this.state.addressSearchInput)
-
-      })
-    }
-  //triggerd when user inputs text in the address search box
-  changeAddressInputHandle = (e) => {
-    e.preventDefault()
-    this.setState({
-      addressSearchInput: e.target.value
-    })
-  }
-  render(){
-    let content = null;
-    
-    //load spinner if address is loading
-    if(!this.state.isLoading){
-      if(this.state.isAddressFound){
-        content = <div className = "content"><AddressInformation addressInformation = {this.state.addressInformation} updateAddress = {this.searchAddress}/>
-        <TransactionsList addressInformation = {this.state.addressInformation} updateAddress = {this.searchAddress} 
-        numberOfPages = {this.state.numberOfPages} offset = {this.state.offset} changeOffset={this.changeOffset}/>  </div>;
-      }else{
-        //address not found
-        content=<h4><span className="badge badge-danger">Address not found</span></h4>
-      }
-      
-    }else{ //load address information
-      content = <div className="spinner-border content " role="status">
-                    <span className="sr-only ">Loading...</span>
-                 </div>
-    }
-
-    return (
-      <div>
-      <InputAddress submitHandle = {this.submitAddressHandle} changeHandle = {this.changeAddressInputHandle} input = {this.state.addressSearchInput}/>
-      {content}
-      </div>
-    )
-  }
-}
-
-//general structure of app (header + address related stuff)
-class App extends Component {
-  render() {
-    return (
-      
-      <div className="App" >
-        {/* header */}
-        <BlockchainAddress/> 
-      </div>
-    );
   }
 }
 

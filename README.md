@@ -3,6 +3,8 @@ React web app that loads and display the balance and transactions for a bitcoin 
 
 Using bootstrap for css 
 
+Main code contained in src/App.js
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
